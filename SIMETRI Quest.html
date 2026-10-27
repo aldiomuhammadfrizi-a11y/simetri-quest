@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#0b1220">
+    <title>SIMETRI Quest</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: 'Nunito', sans-serif; color: #fff; overflow: hidden;
+            background-color: #0b1220;
+            background-image:
+                linear-gradient(rgba(96,165,250,.07) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(96,165,250,.07) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+        .hidden { display: none !important; }
+
+        /* ===== Kerangka aplikasi: portrait, penuh layar HP ===== */
+        .app {
+            height: 100vh; height: 100dvh;
+            max-width: 560px; margin: 0 auto;
+            display: flex; flex-direction: column;
+            background: rgba(11,18,32,.55);
+        }
+        .app-header {
+            position: relative; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+            background: rgba(11,18,32,.92);
+            border-bottom: 1px solid #1e2a44;
+        }
+        .progress {
+            position: absolute; left: 0; bottom: -1px; height: 3px; width: 0;
+            background: linear-gradient(90deg, #f59e0b, #fde68a);
+            border-radius: 0 3px 3px 0; transition: width .45s ease;
+        }
+        body:has(#screen-1:not(.hidden)) .progress { width: 11.1%; }
+        body:has(#screen-2:not(.hidden)) .progress { width: 22.2%; }
+        body:has(#screen-3:not(.hidden)) .progress { width: 33.3%; }
+        body:has(#screen-4:not(.hidden)) .progress { width: 44.4%; }
+        body:has(#screen-5:not(.hidden)) .progress { width: 55.6%; }
+        body:has(#screen-6:not(.hidden)) .progress { width: 66.7%; }
+        body:has(#screen-7:not(.hidden)) .progress { width: 77.8%; }
+        body:has(#screen-8:not(.hidden)) .progress { width: 88.9%; }
+        body:has(#screen-9:not(.hidden)) .progress { width: 100%; }
+
+        #guru-icon {
+            flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; background: #f59e0b; cursor: pointer; font-size: 18px;
+            box-shadow: 0 3px 0 #b45309; transition: transform .1s, box-shadow .1s;
+        }
+        #guru-icon:active { transform: translateY(2px); box-shadow: 0 1px 0 #b45309; }
+
+        .hdr-btn {
+            flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            border-radius: 12px; background: #16223d; border: 1px solid #2a3a5c; cursor: pointer; font-size: 18px;
+            box-shadow: 0 3px 0 #0a1020; transition: transform .1s, box-shadow .1s; user-select: none;
+        }
+        .hdr-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #0a1020; }
+
+        .app-main { flex: 1; min-height: 0; position: relative; }
+
+        /* ===== Layar: mengisi seluruh area, tanpa scroll halaman ===== */
+        .screen {
+            height: 100%; display: flex; flex-direction: column;
+            padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+        }
+        .screen-body {
+            flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .screen-body.center { justify-content: center; }
+        .screen-foot { flex-shrink: 0; padding-top: 12px; }
+        .fade-in { animation: fadeIn .4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: rgba(22,34,61,.9); border: 1px solid #2a3a5c; border-radius: 18px; padding: 14px; }
+        .glass-panel { background: rgba(30,41,59,.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.1); }
+        .title { font-size: 1.35rem; line-height: 1.2; font-weight: 900; color: #fbbf24; }
+        .lead { font-size: .95rem; line-height: 1.45; color: #cbd5e1; }
+        .lbl { display: block; font-size: .85rem; font-weight: 700; color: #94a3b8; margin-bottom: 6px; }
+        .lbl.amber { color: #fde68a; }
+
+        /* ===== Input & tombol (ukuran besar, mudah disentuh) ===== */
+        .field {
+            width: 100%; padding: 13px 14px; border-radius: 14px; font-size: 16px; color: #fff;
+            background: #0f1a30; border: 1.5px solid #334155; outline: none; font-family: inherit;
+        }
+        .field:focus { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,.18); }
+        textarea.field { resize: none; line-height: 1.35; }
+        .btn {
+            width: 100%; min-height: 52px; padding: 12px 16px; border: 0; border-radius: 16px;
+            font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+            transition: transform .1s, box-shadow .1s;
+        }
+        .btn:active { transform: translateY(3px); }
+        .btn-amber { background: #f59e0b; color: #1e1b0b; box-shadow: 0 4px 0 #b45309; }
+        .btn-amber:active { box-shadow: 0 1px 0 #b45309; }
+        .btn-blue { background: #3b82f6; color: #fff; box-shadow: 0 4px 0 #1d4ed8; }
+        .btn-blue:active { box-shadow: 0 1px 0 #1d4ed8; }
+        .btn-green { background: #22c55e; color: #052e16; box-shadow: 0 4px 0 #15803d; }
+        .btn-green:active { box-shadow: 0 1px 0 #15803d; }
+        .btn-red { background: #ef4444; color: #fff; box-shadow: 0 4px 0 #b91c1c; }
+        .btn-red:active { box-shadow: 0 1px 0 #b91c1c; }
+        .btn-inline { width: auto; padding-left: 20px; padding-right: 20px; }
+
+        .opt {
+            flex: 1 1 0; min-height: 60px; max-height: 120px; width: 100%;
+            text-align: left; padding: 12px 16px; border-radius: 16px; font-family: inherit;
+            font-size: .95rem; line-height: 1.35; font-weight: 700; color: #e2e8f0; cursor: pointer;
+            background: #16223d; border: 1.5px solid #334155; transition: background .15s, border-color .15s, transform .1s;
+        }
+        .opt:active { background: #1f2f55; border-color: #fbbf24; transform: scale(.985); }
+
+        .hint { border-color: #3b4f7a; }
+        .hint-item + .hint-item { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #334155; }
+        .hint-item h4 { font-size: .9rem; font-weight: 800; color: #fff; margin-bottom: 2px; }
+        .hint-item p { font-size: .85rem; line-height: 1.35; color: #cbd5e1; }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .chips span { font-size: .78rem; font-weight: 800; color: #fde68a; background: #0f1a30; border: 1px solid #475569; border-radius: 999px; padding: 3px 10px; }
+        .btn-ghost { background: transparent; color: #e2e8f0; border: 1.5px solid #475569; }
+        .btn-ghost:active { background: #16223d; }
+        .confetti { position: fixed; top: -16px; width: 9px; height: 14px; border-radius: 2px; z-index: 40; pointer-events: none; animation: confettiFall linear forwards; }
+        @keyframes confettiFall { to { transform: translateY(108vh) rotate(720deg); } }
+
+        .tile { text-align: center; padding: 12px 6px; border-radius: 16px; background: #16223d; border: 1px solid #2a3a5c; }
+        .tile b { display: block; font-size: 1.4rem; font-weight: 900; color: #fde68a; line-height: 1.1; }
+        .tile span { display: block; font-size: .72rem; color: #94a3b8; margin-top: 4px; line-height: 1.25; }
+
+        .badge { font-size: 5rem; animation: popIn .8s cubic-bezier(.175,.885,.32,1.275); }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        #custom-modal > div { animation: popIn .25s ease-out; max-height: 85vh; max-height: 85dvh; overflow-y: auto; }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+        @media (max-height: 640px) {
+            .title { font-size: 1.15rem; } .lead { font-size: .88rem; }
+            .screen { padding-top: 10px; } .btn { min-height: 46px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app">
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="min-w-0">
+                <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200 leading-tight">SIMETRI QUEST</h1>
+                <p class="text-slate-400 text-xs leading-tight">Misi Kesebangunan Detektif Matematika</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <!-- Tombol musik (nyala/mati) -->
+                <div id="music-btn" class="hdr-btn" onclick="toggleMusic()" role="button" aria-label="Nyalakan atau matikan musik">🔊</div>
+                <!-- Dashboard Guru Icon -->
+                <div id="guru-icon" onclick="openDashboard()">🔒</div>
+            </div>
+            <div class="progress"></div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="app-main">
+
+            <!-- Screen 0: Identitas -->
+            <div id="screen-0" class="screen fade-in">
+                <div class="screen-body center">
+                    <svg viewBox="0 0 240 120" class="mx-auto" style="width:78%;max-width:260px;height:auto" aria-hidden="true">
+                        <polygon points="15,105 75,105 15,60" fill="rgba(96,165,250,.15)" stroke="#60a5fa" stroke-width="2.5" stroke-linejoin="round"/>
+                        <polygon points="105,105 225,105 105,15" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="2.5" stroke-linejoin="round"/>
+                        <text x="90" y="72" fill="#fbbf24" font-size="26" font-weight="900" text-anchor="middle">∼</text>
+                    </svg>
+                    <div>
+                        <h2 class="title text-center" style="font-size:1.6rem">Assalamu'alaikum, Detektif!</h2>
+                        <p class="lead text-center mt-2">Masukkan identitasmu sebelum memulai misi besar hari ini.</p>
+                    </div>
+                    <div class="space-y-3 mt-1">
+                        <input type="text" id="siswa-nama" placeholder="Nama Lengkap" class="field">
+                        <input type="text" id="siswa-kelas" placeholder="Kelas (Contoh: IX A)" class="field">
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="startApp()" class="btn btn-amber">Mulai Petualangan &amp; Nyalakan Musik</button>
+                </div>
+            </div>
+
+            <!-- Screen 1: Misi 1 -->
+            <div id="screen-1" class="screen hidden">
+                <div class="screen-body">
+                    <h2 class="title">Misi 1: Misteri Tiang Bendera</h2>
+                    <p class="lead">Tiang bendera madrasah terlalu tinggi untuk diukur langsung. Kamu punya informasi:</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="tile"><b>1,5 m</b><span>Tinggi tongkat</span></div>
+                        <div class="tile"><b>2 m</b><span>Bayangan tongkat</span></div>
+                        <div class="tile"><b>8 m</b><span>Bayangan tiang bendera</span></div>
+                    </div>
+                    <div class="card hint">
+                        <p class="font-black text-amber-200 text-sm mb-2">Petunjuk Detektif: bandingkan dua contoh ini</p>
+                        <div class="hint-item">
+                            <h4>Contoh 1: Foto dicetak jadi poster</h4>
+                            <p>Foto berukuran 4 cm × 6 cm diperbesar menjadi poster 8 cm × 12 cm.</p>
+                            <div class="chips"><span>Lebar 4 : 8 = 1 : 2</span><span>Tinggi 6 : 12 = 1 : 2</span></div>
+                        </div>
+                        <div class="hint-item">
+                            <h4>Contoh 2: Tongkat dan pohon</h4>
+                            <p>Pada saat yang sama, tongkat 1 m bayangannya 2 m, dan pohon 3 m bayangannya 6 m.</p>
+                            <div class="chips"><span>Tongkat 1 : 2 = 1 : 2</span><span>Pohon 3 : 6 = 1 : 2</span></div>
+                        </div>
+                        <p class="text-sm font-bold text-white mt-3 leading-snug">Apa yang kamu temukan dari perbandingan pada kedua contoh dan pada tiang bendera?</p>
+                    </div>
+                    <p class="font-bold text-base leading-snug">Tantangan: Bagaimana cara memperkirakan tinggi tiang tanpa memanjatnya?</p>
+                    <div class="flex flex-col gap-3 flex-1" style="min-height:196px">
+                        <button onclick="cekMisi1('a')" class="opt">A. Mengukur tiang secara langsung pakai meteran raksasa.</button>
+                        <button onclick="cekMisi1('b')" class="opt">B. Membandingkan tinggi benda dengan panjang bayangannya.</button>
+                        <button onclick="cekMisi1('c')" class="opt">C. Menebak berdasarkan perkiraan mata saja.</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 2: Misi 2 (Individu) -->
+            <div id="screen-2" class="screen hidden">
+                <div class="screen-body">
+                    <h2 class="title">Misi 2: Detektif Beraksi Sendiri</h2>
+                    <p class="lead">Mulai sekarang, setiap detektif mengerjakan misinya sendiri-sendiri. Siapkan dirimu!</p>
+                    <div class="card flex items-center gap-3">
+                        <div style="font-size:2rem;line-height:1">🕵️</div>
+                        <div class="min-w-0">
+                            <p class="text-xs text-slate-400">Detektif</p>
+                            <p id="detektif-nama" class="font-black text-lg text-amber-200 leading-tight" style="overflow-wrap:anywhere"></p>
+                            <p id="detektif-kelas" class="text-sm text-slate-300"></p>
+                        </div>
+                    </div>
+                    <div class="card hint space-y-3">
+                        <p class="font-black text-amber-200 text-sm">Pegangan Detektif</p>
+                        <p class="text-sm text-slate-300 leading-snug">Kerjakan semua misi dengan kemampuanmu sendiri.</p>
+                        <p class="text-sm text-slate-300 leading-snug">Baca petunjuk dengan teliti sebelum menjawab.</p>
+                        <p class="text-sm text-slate-300 leading-snug">Jangan takut salah, setiap kesalahan adalah pelajaran.</p>
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="nextScreen(3)" class="btn btn-amber">Siap! Masuk ke Laboratorium</button>
+                </div>
+            </div>
+
+            <!-- Screen 3: Misi 3 (Laboratorium) -->
+            <div id="screen-3" class="screen hidden">
+                <div class="screen-body">
+                    <h2 class="title">Misi 3: Laboratorium Kesebangunan</h2>
+                    <p class="lead">Temukan pola dari dua segitiga siku-siku ini.</p>
+
+                    <!-- SVG Segitiga -->
+                    <div class="card">
+                        <div class="flex justify-center items-end" style="gap:20px">
+                            <div class="text-center">
+                                <span class="text-xs text-amber-200">Segitiga A</span>
+                                <svg width="104" height="78" viewBox="0 0 40 30" class="mt-2 mx-auto">
+                                    <polygon points="0,30 40,30 0,0" fill="none" stroke="#60a5fa" stroke-width="2"/>
+                                    <text x="15" y="28" fill="white" font-size="6">4 cm</text>
+                                    <text x="2" y="15" fill="white" font-size="6">3 cm</text>
+                                    <text x="20" y="12" fill="white" font-size="6">5 cm</text>
+                                </svg>
+                            </div>
+                            <div class="text-center">
+                                <span class="text-xs text-amber-200">Segitiga B</span>
+                                <svg width="148" height="111" viewBox="0 0 80 60" class="mt-2 mx-auto">
+                                    <polygon points="0,60 80,60 80,0" fill="none" stroke="#f472b6" stroke-width="2"/>
+                                    <text x="40" y="55" fill="white" font-size="7.5" text-anchor="middle">8 cm</text>
+                                    <text x="76" y="33" fill="white" font-size="7.5" text-anchor="end">6 cm</text>
+                                    <text x="28" y="25" fill="white" font-size="7.5" text-anchor="middle">10 cm</text>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="text-[11px] mt-2 text-center text-slate-400">(Awas, posisinya dibalik!)</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="lbl" style="color:#cbd5e1">Berapa perbandingan sisi alas A (4cm) dengan sisi alas B (8cm)? (Bentuk desimal atau pecahan, misal 1/3)</label>
+                            <input type="text" id="m3-1" class="field" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="lbl" style="color:#cbd5e1">Berapa perbandingan sisi tegak A (3cm) dengan sisi tegak B (6cm)?</label>
+                            <input type="text" id="m3-2" class="field" placeholder="...">
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="cekMisi3()" class="btn btn-blue">Cek Pola</button>
+                </div>
+            </div>
+
+            <!-- Screen 4: Presentasi & Verifikasi -->
+            <div id="screen-4" class="screen hidden">
+                <div class="screen-body">
+                    <h2 class="title">Misi 4: Ruang Presentasi</h2>
+                    <p class="lead">Berdasarkan pola tadi, mari pecahkan misteri tinggi tiang bendera (Tongkat 1,5m, Bayangan 2m, Bayangan Tiang 8m).</p>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="lbl amber">1. Strategi &amp; Rumus:</label>
+                            <textarea rows="2" class="field" placeholder="Ketik strategimu di sini..."></textarea>
+                        </div>
+                        <div>
+                            <label class="lbl amber">2. Perhitungan:</label>
+                            <textarea rows="2" class="field" placeholder="Ketik perhitungan matematisnya..."></textarea>
+                        </div>
+                        <div>
+                            <label class="lbl amber">3. Kesimpulan Akhir Tinggi Tiang:</label>
+                            <textarea rows="2" class="field" placeholder="Jadi tinggi tiang bendera adalah..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <div class="card" style="border-color:#475569">
+                        <p class="text-xs text-slate-400 mb-3 leading-snug">Minta Guru memasukkan PIN untuk memverifikasi presentasimu agar bisa lanjut ke Kuis Individu.</p>
+                        <div class="flex gap-2">
+                            <input type="password" id="pin-guru" placeholder="PIN Guru" class="field text-center" style="min-width:0">
+                            <button onclick="verifikasiGuru()" class="btn btn-red btn-inline">Verifikasi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 5: Kuis Individu -->
+            <div id="screen-5" class="screen hidden text-center">
+                <div class="screen-body">
+                    <h2 class="title">Tugas Individu</h2>
+                    <p class="lead">Kerjakan sendiri dengan jujur! Jika salah, pembahasan akan langsung ditampilkan dan poin bernilai 0.</p>
+                    <div class="card flex-1 flex flex-col justify-center" style="min-height:140px">
+                        <h3 class="font-black text-amber-200 mb-3 text-lg">Soal <span id="kuis-num">1</span> dari 5</h3>
+                        <p id="kuis-q" class="text-base leading-relaxed"></p>
+                    </div>
+                </div>
+                <div class="screen-foot space-y-3">
+                    <input type="text" id="kuis-ans" placeholder="Hanya ketik angka..." inputmode="numeric" class="field text-center">
+                    <button onclick="checkKuis()" class="btn btn-green">Kirim Jawaban</button>
+                </div>
+            </div>
+
+            <!-- Screen 6: Skor Total & Lencana -->
+            <div id="screen-6" class="screen hidden text-center">
+                <div class="screen-body center items-center">
+                    <h2 class="text-4xl font-black text-amber-400">MISI SELESAI!</h2>
+                    <div id="lencana" class="badge hidden">🏆</div>
+                    <div>
+                        <p class="text-lg text-slate-300 mb-1">Skor Akhir Kamu:</p>
+                        <p class="text-7xl font-black text-green-400" id="skor-akhir">100</p>
+                    </div>
+                    <p id="kirim-status" class="text-sm text-amber-200 card" style="border-color:#78350f;padding:10px 14px">Mengirim nilai ke guru...</p>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="nextScreen(7)" class="btn btn-blue">Lihat Kesimpulan Materi</button>
+                </div>
+            </div>
+
+            <!-- Screen 7: Kesimpulan -->
+            <div id="screen-7" class="screen hidden text-center">
+                <div class="screen-body center">
+                    <h2 class="title">Kesimpulan Belajar Hari Ini</h2>
+                    <div class="card">
+                        <svg viewBox="0 0 200 80" class="mx-auto mb-3" style="width:100%;height:auto;max-height:170px">
+                            <polygon points="10,70 60,70 10,10" fill="none" stroke="#60a5fa" stroke-width="2"/>
+                            <text x="30" y="78" fill="#60a5fa" font-size="10">a</text>
+                            <text x="0" y="40" fill="#60a5fa" font-size="10">b</text>
+                            <text x="35" y="35" fill="#60a5fa" font-size="10">c</text>
+
+                            <polygon points="90,70 165,70 90,0" fill="none" stroke="#f472b6" stroke-width="2"/>
+                            <text x="125" y="78" fill="#f472b6" font-size="10">p</text>
+                            <text x="80" y="35" fill="#f472b6" font-size="10">q</text>
+                            <text x="135" y="30" fill="#f472b6" font-size="10">r</text>
+                        </svg>
+                        <p class="text-sm mb-3 text-slate-300 leading-relaxed">Dua bangun datar dikatakan sebangun jika sisi-sisi yang bersesuaian memiliki perbandingan yang sama panjang:</p>
+                        <p class="text-xl font-black text-amber-200 bg-slate-900 inline-block px-4 py-2 rounded-xl border border-slate-700">a / p = b / q = c / r</p>
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="nextScreen(8)" class="btn btn-blue">Isi Lembar Refleksi</button>
+                </div>
+            </div>
+
+            <!-- Screen 8: Refleksi & Penutup -->
+            <div id="screen-8" class="screen hidden text-center">
+                <div class="screen-body">
+                    <h2 class="title">Refleksi Detektif</h2>
+                    <div class="text-left">
+                        <label class="lbl" style="color:#cbd5e1">Bagian mana yang paling kamu sukai hari ini?</label>
+                        <input type="text" class="field">
+                    </div>
+                    <div class="bg-gradient-to-r from-amber-500 to-yellow-400 p-1 rounded-2xl mt-auto">
+                        <div class="bg-slate-900 p-5 rounded-xl text-center">
+                            <p class="italic text-slate-300 mb-3 leading-relaxed">"Matematika mengajarkan kita bahwa setiap masalah pasti ada solusinya."</p>
+                            <p class="font-bold text-amber-400 leading-relaxed">Teruslah berlatih, Detektif Hebat! Jangan pernah lelah mencari jawaban. Sampai jumpa di misi berikutnya!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="selesai()" class="btn btn-amber">Selesai</button>
+                </div>
+            </div>
+
+            <!-- Screen 9: Penutup -->
+            <div id="screen-9" class="screen hidden text-center">
+                <div class="screen-body center items-center">
+                    <div class="badge" style="font-size:4.5rem;line-height:1">🌟</div>
+                    <h2 class="text-3xl font-black text-amber-400 leading-tight">Selamat, <span id="selesai-nama"></span>!</h2>
+                    <p class="lead">Kamu sudah menuntaskan semua misi Simetri Quest.</p>
+                    <div class="card" style="border-color:#78350f;padding:8px 18px">
+                        <span class="text-sm text-slate-300">Skor akhirmu </span><b class="text-2xl font-black text-green-400" id="selesai-skor">0</b>
+                    </div>
+                    <div class="card text-left" style="border-color:#475569">
+                        <p class="text-slate-200 leading-relaxed mb-3">Jangan takut salah. Setiap kesalahan adalah petunjuk baru yang membawamu lebih dekat ke jawaban yang benar.</p>
+                        <p class="text-slate-200 leading-relaxed mb-3">Terus berlatih, terus bertanya, dan jangan berhenti penasaran. Kamu pasti bisa menjadi detektif matematika terbaik!</p>
+                        <p class="font-bold text-amber-300 leading-relaxed">Semoga ilmunya bermanfaat dan berkah. Wassalamu'alaikum, sampai jumpa di misi berikutnya!</p>
+                    </div>
+                </div>
+                <div class="screen-foot">
+                    <button onclick="location.reload()" class="btn btn-ghost">Kembali ke Awal</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Kustom -->
+    <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-800 border-2 border-amber-500 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center">
+            <h3 id="modal-title" class="text-2xl font-bold text-amber-400 mb-2">Judul</h3>
+            <div id="modal-desc" class="text-slate-300 mb-6 text-sm leading-relaxed">Deskripsi</div>
+            <button id="modal-btn" onclick="closeModal()" class="btn btn-amber">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Dashboard Guru Panel -->
+    <div id="guru-panel" class="fixed inset-0 bg-slate-900 z-[60] flex flex-col p-4 hidden" style="padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:calc(16px + env(safe-area-inset-bottom))">
+        <h2 class="text-2xl font-bold text-amber-400 mb-4 text-center">Laporan Aktivitas Siswa</h2>
+        <div class="bg-slate-800 p-4 rounded-2xl flex-1 min-h-0 overflow-y-auto">
+            <table class="w-full text-left text-sm text-slate-300">
+                <thead>
+                    <tr class="border-b border-slate-600">
+                        <th class="py-2">Nama</th>
+                        <th>Kelas</th>
+                        <th>Skor Individu</th>
+                    </tr>
+                </thead>
+                <tbody id="guru-data">
+                    <!-- Data masuk ke sini -->
+                </tbody>
+            </table>
+            <button onclick="clearGuruData()" class="mt-4 text-xs text-red-400 border border-red-400 px-3 py-2 rounded-lg hover:bg-red-900">Hapus Data</button>
+        </div>
+        <button onclick="closeDashboard()" class="btn bg-slate-700 text-white mt-4 flex-shrink-0">Tutup Dashboard</button>
+    </div>
+
+    <script>
+        // --- MUSIK BAWAAN (dibuat langsung di HP, tanpa internet & tanpa file mp3) ---
+        const Music = (function () {
+            const BPM = 108, STEP = 60 / BPM / 2;           // satu langkah = not 1/8
+            const CHORDS = [[60,64,67],[59,62,67],[57,60,64],[57,60,65],[60,64,67],[59,62,67],[57,60,65],[59,62,67]];
+            const BASS   = [48,43,45,41,48,43,41,43];       // C G Am F C G F G
+            const ARP    = [0,1,2,1,0,1,2,1];
+            const MEL = [
+                76,0,79,76, 72,0,74,76,
+                74,0,79,74, 71,0,74,0,
+                72,0,76,72, 69,0,72,76,
+                77,0,72,77, 74,72,69,0,
+                76,79,81,79, 76,0,72,0,
+                74,76,74,71, 74,0,79,0,
+                77,76,74,72, 69,72,74,0,
+                74,0,71,74, 79,0,0,0
+            ];
+            let ctx = null, master = null, noise = null, timer = null;
+            let step = 0, nextTime = 0, running = false, muted = false;
+            const VOL = 0.6;
+            const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+            function tone(type, midi, t, dur, vol) {
+                const o = ctx.createOscillator(), g = ctx.createGain();
+                o.type = type; o.frequency.value = hz(midi);
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                o.connect(g); g.connect(master);
+                o.start(t); o.stop(t + dur + 0.03);
+            }
+            function hat(t) {
+                const src = ctx.createBufferSource(); src.buffer = noise;
+                const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 7000;
+                const g = ctx.createGain();
+                g.gain.setValueAtTime(0.035, t);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+                src.connect(f); f.connect(g); g.connect(master);
+                src.start(t); src.stop(t + 0.06);
+            }
+            function tick() {
+                while (nextTime < ctx.currentTime + 0.3) {
+                    const s = step % 64, bar = s >> 3, i = s & 7;
+                    if (i === 0 || i === 4) tone("triangle", BASS[bar], nextTime, STEP * 3.2, 0.16);
+                    tone("sine", CHORDS[bar][ARP[i]], nextTime, STEP * 1.6, 0.05);
+                    if (MEL[s]) tone("triangle", MEL[s], nextTime, STEP * 1.8, 0.11);
+                    if (i % 2 === 1) hat(nextTime);
+                    nextTime += STEP; step++;
+                }
+            }
+            document.addEventListener("visibilitychange", () => {
+                if (!ctx || !running) return;
+                if (document.hidden) ctx.suspend(); else ctx.resume();
+            });
+
+            return {
+                play() {
+                    try {
+                        if (!ctx) {
+                            const AC = window.AudioContext || window.webkitAudioContext;
+                            ctx = new AC();
+                            master = ctx.createGain();
+                            master.gain.value = muted ? 0 : VOL;
+                            master.connect(ctx.destination);
+                            noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.1), ctx.sampleRate);
+                            const d = noise.getChannelData(0);
+                            for (let k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+                        }
+                        return ctx.resume().then(() => {
+                            if (!running) {
+                                running = true;
+                                nextTime = ctx.currentTime + 0.1;
+                                timer = setInterval(tick, 80);
+                            }
+                        });
+                    } catch (e) { return Promise.reject(e); }
+                },
+                pause() { running = false; clearInterval(timer); },
+                toggleMute() {
+                    muted = !muted;
+                    if (master) master.gain.value = muted ? 0 : VOL;
+                    return muted;
+                },
+                fanfare() {
+                    if (!ctx || muted) return;
+                    const t = ctx.currentTime + 0.05;
+                    [72, 76, 79, 84].forEach((m, k) => tone("square", m, t + k * 0.13, 0.22, 0.07));
+                    [72, 76, 79, 84].forEach(m => tone("triangle", m, t + 0.55, 1.4, 0.12));
+                }
+            };
+        })();
+        let bgm = Music;
+        let activeScreen = 0;
+        let pName = "", pClass = "";
+        
+        // Data Kuis Misi 5 (5 Soal Sederhana)
+        const kuisData = [
+            { q: "Segitiga A memiliki sisi tegak 3cm. Segitiga B sebangun dengan A. Jika perbandingannya adalah 2 kali lipat, berapa panjang sisi tegak segitiga B?", a: "6", exp: "Faktor skala = 2. Maka sisi bersesuaian = 3 cm x 2 = 6 cm." },
+            { q: "Tinggi tongkat 2m memiliki bayangan 3m. Pada saat yang sama, bayangan tiang adalah 12m. Berapa meter tinggi tiang?", a: "8", exp: "Rumus: (Tinggi Tiang / Bayangan Tiang) = (Tinggi Tongkat / Bayangan Tongkat)<br> T / 12 = 2 / 3 <br> 3 x T = 24 <br> T = 8." },
+            { q: "Segitiga siku-siku PQR sebangun dengan XYZ. Sisi alas PQR 4cm dan XYZ 12cm. Jika sisi tegak PQR 5cm, berapa sisi tegak XYZ?", a: "15", exp: "Perbandingan (Faktor skala) = 12 / 4 = 3. Maka sisi tegak XYZ = 5 x 3 = 15." },
+            { q: "Bayangan sebuah gedung adalah 20m. Tongkat pramuka setinggi 3m memiliki bayangan 4m. Berapa meter tinggi gedung?", a: "15", exp: "Gedung/20 = 3/4 <br> 4 x Gedung = 60 <br> Gedung = 15." },
+            { q: "Dua segitiga sebangun. Sisi tegak A = 6, tegak B = 9. Jika sisi miring A = 10, berapa panjang sisi miring B?", a: "15", exp: "Perbandingan: 6 / 9 = 10 / B (Disederhanakan jadi 2 / 3 = 10 / B)<br> 2 x B = 30 <br> B = 15." }
+        ];
+        
+        let currentKuis = 0;
+        let kuisScore = 0;
+        let kuisCallback = null; // Menyimpan fungsi untuk dipanggil setelah modal ditutup
+
+        function showModal(title, desc, btnText, callback = null) {
+            document.getElementById("modal-title").innerHTML = title;
+            document.getElementById("modal-desc").innerHTML = desc;
+            document.getElementById("modal-btn").innerText = btnText;
+            document.getElementById("custom-modal").classList.remove("hidden");
+            kuisCallback = callback;
+        }
+
+        function closeModal() {
+            document.getElementById("custom-modal").classList.add("hidden");
+            if (kuisCallback) {
+                let temp = kuisCallback;
+                kuisCallback = null;
+                temp(); // Jalankan aksi selanjutnya (lanjut soal)
+            }
+        }
+
+        function nextScreen(n) {
+            document.getElementById(`screen-${activeScreen}`).classList.add("hidden");
+            document.getElementById(`screen-${n}`).classList.remove("hidden");
+            document.getElementById(`screen-${n}`).classList.add("fade-in");
+            activeScreen = n;
+        }
+
+        function startApp() {
+            pName = document.getElementById("siswa-nama").value.trim();
+            pClass = document.getElementById("siswa-kelas").value.trim();
+            if(!pName || !pClass) {
+                showModal("Tunggu Dulu!", "Tolong isi Nama dan Kelas ya.", "Oke");
+                return;
+            }
+            document.getElementById("detektif-nama").innerText = pName;
+            document.getElementById("detektif-kelas").innerText = "Kelas " + pClass;
+            bgm.play().catch(e => console.log("Audio play diizinkan setelah interaksi"));
+            nextScreen(1);
+        }
+
+        function cekMisi1(ans) {
+            if(ans === 'b') {
+                showModal("Strategi Tepat!", "Detektif yang pintar! Matematika kesebangunan memungkinkan kita mengukur tanpa harus memanjat.", "Lanjut Misi 2", () => nextScreen(2));
+            } else {
+                showModal("Coba Pikirkan Lagi", "Coba lihat informasi 'bayangan'. Mungkin kita bisa memanfaatkan cahaya matahari?", "Coba Lagi");
+            }
+        }
+
+        function cekMisi3() {
+            let j1 = document.getElementById("m3-1").value.trim();
+            let j2 = document.getElementById("m3-2").value.trim();
+            if((j1 === "1/2" || j1 === "0.5" || j1 === "0,5") && (j2 === "1/2" || j2 === "0.5" || j2 === "0,5")) {
+                showModal("Pola Ditemukan!", "Hebat! Siswa bersesuaian pada segitiga sebangun memiliki perbandingan yang sama (1/2 atau 0,5).", "Lanjut Misi 4", () => nextScreen(4));
+            } else {
+                showModal("Belum Tepat", "Coba hitung perlahan. Berapa 4 dibagi 8? Dan 3 dibagi 6? Bentuk pecahannya adalah...", "Coba Lagi");
+            }
+        }
+
+        async function verifikasiGuru() {
+            let pin = document.getElementById("pin-guru").value;
+            if(await sha(pin) === PIN_HASH) {
+                showModal("Verifikasi Berhasil", "Presentasi diterima! Silakan lanjut ke Tugas Individu.", "Mulai Kuis", () => {
+                    loadKuis();
+                    nextScreen(5);
+                });
+            } else {
+                showModal("Akses Ditolak", "PIN salah. Minta guru untuk memasukkan PIN yang benar.", "Tutup");
+            }
+        }
+
+        function loadKuis() {
+            if(currentKuis < kuisData.length) {
+                document.getElementById("kuis-num").innerText = currentKuis + 1;
+                document.getElementById("kuis-q").innerText = kuisData[currentKuis].q;
+                document.getElementById("kuis-ans").value = "";
+            } else {
+                saveToDashboard();
+                document.getElementById("skor-akhir").innerText = kuisScore;
+                if(kuisScore === 100) document.getElementById("lencana").classList.remove("hidden");
+                nextScreen(6);
+            }
+        }
+
+        function checkKuis() {
+            let userAns = document.getElementById("kuis-ans").value.trim().toLowerCase();
+            if(userAns === "") {
+                showModal("Peringatan", "Jawaban tidak boleh kosong!", "Oke");
+                return;
+            }
+
+            let current = kuisData[currentKuis];
+            
+            if(userAns === current.a) {
+                kuisScore += 20;
+                showModal("Benar!", "Jawabanmu tepat sekali! +20 Poin.", "Lanjut", nextKuisAction);
+            } else {
+                // LANGSUNG SALAH, TAMPILKAN PEMBAHASAN
+                let pesanSalah = `Jawaban yang benar adalah <b>${current.a}</b>.<br><br><div class='text-left mt-2 p-2 bg-slate-900 rounded text-amber-200 text-xs border border-slate-700'><b>Penjelasan Lengkap:</b><br>${current.exp}</div>`;
+                showModal("Kurang Tepat (0 Poin)", pesanSalah, "Mengerti, Lanjut Soal", nextKuisAction);
+            }
+        }
+
+        function nextKuisAction() {
+            currentKuis++;
+            loadKuis();
+        }
+
+        // --- TOMBOL MUSIK & PENUTUP ---
+        function toggleMusic() {
+            const muted = Music.toggleMute();
+            document.getElementById("music-btn").innerText = muted ? "🔇" : "🔊";
+        }
+
+        function selesai() {
+            document.getElementById("selesai-nama").innerText = pName;
+            document.getElementById("selesai-skor").innerText = kuisScore;
+            Music.fanfare();
+            nextScreen(9);
+            confetti();
+        }
+
+        function confetti() {
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            const warna = ["#fbbf24", "#60a5fa", "#f472b6", "#4ade80", "#fde68a"];
+            const wadah = [];
+            for (let i = 0; i < 32; i++) {
+                const c = document.createElement("div");
+                c.className = "confetti";
+                c.style.left = Math.random() * 100 + "vw";
+                c.style.background = warna[i % warna.length];
+                c.style.animationDuration = (2.6 + Math.random() * 2) + "s";
+                c.style.animationDelay = (Math.random() * 0.9) + "s";
+                document.body.appendChild(c);
+                wadah.push(c);
+            }
+            setTimeout(() => wadah.forEach(c => c.remove()), 6500);
+        }
+
+        // --- DASHBOARD GURU (database bersama) ---
+        const PIN_HASH = "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5";
+        async function sha(t){ try{ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join(""); }catch(e){ return ""; } }
+        let dbRef=null, userRef=null, unsubDash=null;
+        (async()=>{ try{ if(window.claude&&claude.use){ dbRef=await claude.use("db"); userRef=await claude.use("user"); } }catch(e){} })();
+
+        async function saveToDashboard() {
+            const rec = { nama: pName, kelas: pClass, skor: kuisScore, waktu: Date.now() };
+            try { const a = JSON.parse(localStorage.getItem("simetri_guru_data") || "[]"); a.push(rec); localStorage.setItem("simetri_guru_data", JSON.stringify(a)); } catch(e){}
+            let ok = false;
+            try {
+                const uid = userRef ? await userRef.id() : null;
+                if (dbRef && uid) { await dbRef.doc("scores/" + uid).set(rec); ok = true; }
+            } catch(e){}
+            const el = document.getElementById("kirim-status");
+            if (el) el.innerText = ok ? "✅ Nilai Terkirim ke Dashboard Guru" : "⚠️ Nilai belum terkirim ke guru. Tunjukkan layar skor ini kepada gurumu.";
+        }
+
+        async function openDashboard() {
+            let guru = false;
+            try { guru = userRef ? await userRef.canEdit() : false; } catch(e){}
+            if (!guru) { alert("Dashboard hanya bisa dibuka guru pemilik halaman yang sudah masuk (login)."); return; }
+            document.getElementById("guru-panel").classList.remove("hidden");
+            renderDashboard();
+        }
+
+        function closeDashboard() {
+            if (unsubDash) { unsubDash(); unsubDash = null; }
+            document.getElementById("guru-panel").classList.add("hidden");
+        }
+
+        function renderDashboard() {
+            const tbody = document.getElementById("guru-data");
+            if (!dbRef) { tbody.innerHTML = ""; return; }
+            if (unsubDash) unsubDash();
+            unsubDash = dbRef.collection("scores").onSnapshot(snap => {
+                const rows = snap.docs.map(d => d.data()).sort((a,b) => (b.waktu||0) - (a.waktu||0));
+                tbody.innerHTML = "";
+                rows.forEach(x => {
+                    const tr = document.createElement("tr"); tr.className = "border-b border-slate-700";
+                    [x.nama, x.kelas, x.skor].forEach((v,i) => { const td = document.createElement("td"); if(i===0) td.className="py-2"; if(i===2) td.className="font-bold text-amber-400"; td.textContent = v; tr.appendChild(td); });
+                    tbody.appendChild(tr);
+                });
+            }, () => {});
+        }
+
+        async function clearGuruData() {
+            if (!dbRef || !confirm("Yakin hapus semua data laporan?")) return;
+            try { const snap = await dbRef.collection("scores").get(); for (const d of snap.docs) { await dbRef.doc("scores/" + d.id).delete(); } } catch(e){}
+        }
+    </script>
+</body>
+</html>
